@@ -31,4 +31,4 @@ figcaption{display:flex;justify-content:space-between;align-items:center;padding
 document.querySelectorAll('.bar button').forEach(b=>b.onclick=()=>{const f=b.dataset.f;document.querySelectorAll('.bar button').forEach(x=>x.classList.toggle('on',x===b));
 document.querySelectorAll('.c').forEach(c=>c.classList.toggle('hide',f!=='all'&&c.dataset.s!==f));
 document.querySelectorAll('.yr').forEach(h=>{let n=h.nextElementSibling,v=0;while(n&&!n.classList.contains('yr')){if(!n.classList.contains('hide'))v++;n=n.nextElementSibling}h.classList.toggle('hide',!v)});});
-</script></body></html>
+</script><script>if(window.parent!==window){const s=()=>parent.postMessage({dpcReviewsHeight:document.documentElement.scrollHeight},"*");new ResizeObserver(s).observe(document.body);addEventListener("load",s);s()}</script></body></html>
