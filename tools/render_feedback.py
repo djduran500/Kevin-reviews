@@ -19,9 +19,9 @@ body{background:#fff;font-family:Inter,sans-serif;width:941px}
 .kd{margin-left:80px;margin-top:4px;font:400 15px/20px Inter,sans-serif;color:#8a8a8a}
 .pill{position:absolute;right:36px;top:45px;height:30px;padding:0 12px;border:1.5px solid #6b3fa0;border-radius:999px;
  color:#573474;font:600 13.5px/27px Inter,sans-serif}
-.tx{margin-top:29px;padding-right:28px;font:400 17px/28px Inter,sans-serif;color:#262626;white-space:pre-line}
+.st{margin-top:24px;color:#f5b301;font-size:20px;letter-spacing:2px}.st+.tx{margin-top:8px}.tx{margin-top:29px;padding-right:28px;font:400 17px/28px Inter,sans-serif;color:#262626;white-space:pre-line}
 </style></head><body><div class="card"><div class="av">{I}</div><div class="nm">{N}</div><div class="kd">{K}</div>
-<div class="pill">Client feedback</div><div class="tx">{T}</div></div></body></html>"""
+<div class="pill">{P}</div>{S}<div class="tx">{T}</div></div></body></html>"""
 
 cards = json.load(open(sys.argv[1]))
 out = Path(sys.argv[2]); out.mkdir(parents=True, exist_ok=True)
@@ -32,7 +32,9 @@ with sync_playwright() as p:
         h = (TPL.replace("{I}", html.escape(c["name"][0].upper()))
                 .replace("{N}", html.escape(c["name"]))
                 .replace("{K}", html.escape(c.get("kind", "Wedding")))
-                .replace("{T}", html.escape(c["text"])))
+                .replace("{T}", html.escape(c["text"]))
+                .replace("{P}", html.escape(c.get("pill", "Client feedback")))
+                .replace("{S}", '<div class="st">★★★★★</div>' if c.get("stars") else ""))
         pg.set_content(h)
         pg.evaluate("document.fonts.ready")
         png = pg.locator(".card").screenshot()

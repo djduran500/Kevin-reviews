@@ -20,10 +20,11 @@ have = {re.search(r'src="img/([^"]+)"', f).group(1) for f in figs}
 for c in cards:
     if c["file"] in have: continue
     w, h = Image.open(d / "img" / c["file"]).size
-    t = fmt(c["date"])
-    figs.append(f'<figure class="c" data-s="Feedback"><figcaption><span class="b b-Feedback">Client Feedback</span>'
+    t = fmt(c["date"]); kind = c.get("type", "Feedback"); lab = {"Feedback": "Client Feedback", "Review": "5-Star Review"}[kind]
+    alt = "Client feedback" if kind == "Feedback" else "5-star review"
+    figs.append(f'<figure class="c" data-s="{kind}"><figcaption><span class="b b-{kind}">{lab}</span>'
                 f'<time>{t}</time></figcaption><img loading="lazy" decoding="async" width="{w}" height="{h}" '
-                f'src="img/{c["file"]}" alt="Client feedback, {t}"></figure>')
+                f'src="img/{c["file"]}" alt="{alt}, {t}"></figure>')
 
 def key(f):
     n = re.search(r'src="img/([^"]+)"', f).group(1)
@@ -41,7 +42,7 @@ s = s[:i] + main + s[j:]
 
 # filter bar
 src = [re.search(r'data-s="(\w+)"', f).group(1) for f in figs]
-names = {"Knot": "The Knot", "WeddingWire": "WeddingWire", "Zola": "Zola", "Google": "Google", "Feedback": "Client Feedback"}
+names = {"Knot": "The Knot", "WeddingWire": "WeddingWire", "Zola": "Zola", "Google": "Google", "Review": "5-Star Reviews", "Feedback": "Client Feedback"}
 btn = f'<button class="on" data-f="all">All <b>{len(figs)}</b></button>' + "".join(
     f'<button data-f="{k}">{v} <b>{src.count(k)}</b></button>' for k, v in names.items() if src.count(k))
 yrs = '<div class="yrs">' + "".join(f'<a href="#y{y}">{y}</a>' for y in groups) + "</div>"
@@ -54,5 +55,6 @@ dated = sorted(k for k in map(key, figs) if k != "0000")
 mon = lambda k: date(int(k[:4]), int(k[5:7]), 1).strftime("%B %Y")
 rng = mon(dated[-1]) if mon(dated[-1]) == mon(dated[0]) else f"{mon(dated[-1])} back to {mon(dated[0])}"
 s = re.sub(r'<p class="sub">[^<]*', f'<p class="sub">{" + ".join(parts)} · {rng} · newest first', s, count=1)
+if ".b-Review" not in s: s = s.replace("</style>", ".b-Review{background:#7c3aed}</style>", 1)
 page.write_text(s)
 print(d.name, " + ".join(parts), "|", rng)
