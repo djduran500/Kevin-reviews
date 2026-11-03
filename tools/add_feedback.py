@@ -10,6 +10,7 @@ from PIL import Image
 
 d = Path(sys.argv[1]); cards = json.load(open(sys.argv[2]))
 page = d / "index.html"; s = page.read_text()
+nodates = "<!--nodates-->" in s  # DJs with under 10 reviews/feedback: no dates shown anywhere
 
 def fmt(iso):
     y, m, dd = map(int, iso.split("-")); return date(y, m, dd).strftime("%b ") + str(dd) + f", {y}"
@@ -23,8 +24,8 @@ for c in cards:
     t = fmt(c["date"]); kind = c.get("type", "Feedback"); lab = {"Feedback": "Client Feedback", "Review": "5-Star Review"}[kind]
     alt = "Client feedback" if kind == "Feedback" else "5-star review"
     figs.append(f'<figure class="c" data-s="{kind}"><figcaption><span class="b b-{kind}">{lab}</span>'
-                f'<time>{t}</time></figcaption><img loading="lazy" decoding="async" width="{w}" height="{h}" '
-                f'src="img/{c["file"]}" alt="{alt}, {t}"></figure>')
+                + ("" if nodates else f'<time>{t}</time>') + f'</figcaption><img loading="lazy" decoding="async" width="{w}" height="{h}" '
+                f'src="img/{c["file"]}" alt="{alt if nodates else alt + ", " + t}"></figure>')
 
 def key(f):
     n = re.search(r'src="img/([^"]+)"', f).group(1)
@@ -37,7 +38,7 @@ for f in figs:
 main = ""
 for y, fs in groups.items():
     n = len(fs); lab = (f"{n} item" if n == 1 else f"{n} items") if y == "Undated" else (f"{n} review" if n == 1 else f"{n} reviews")
-    main += f'<h2 class="yr" id="y{y}"><span>{y}</span><small>{lab}</small></h2>' + "".join(fs)
+    main += ("" if nodates else f'<h2 class="yr" id="y{y}"><span>{y}</span><small>{lab}</small></h2>') + "".join(fs)
 s = s[:i] + main + s[j:]
 
 # filter bar
@@ -46,15 +47,18 @@ names = {"Knot": "The Knot", "WeddingWire": "WeddingWire", "Zola": "Zola", "Goog
 btn = f'<button class="on" data-f="all">All <b>{len(figs)}</b></button>' + "".join(
     f'<button data-f="{k}">{v} <b>{src.count(k)}</b></button>' for k, v in names.items() if src.count(k))
 yrs = '<div class="yrs">' + "".join(f'<a href="#y{y}">{y}</a>' for y in groups) + "</div>"
-s = re.sub(r'<div class="bar"><div class="in">.*?</div></div></div>', f'<div class="bar"><div class="in">{btn}{yrs}</div></div>', s, count=1, flags=re.S)
+if nodates:
+    s = re.sub(r'<div class="bar"><div class="in">.*?</div></div>', f'<div class="bar"><div class="in">{btn}</div></div>', s, count=1, flags=re.S)
+else:
+    s = re.sub(r'<div class="bar"><div class="in">.*?</div></div></div>', f'<div class="bar"><div class="in">{btn}{yrs}</div></div>', s, count=1, flags=re.S)
 
 # summary line
 rev = len(figs) - src.count("Feedback"); fb = src.count("Feedback")
 parts = ([f"{rev} review" + ("s" if rev != 1 else "")] if rev else []) + ([f"{fb} client feedback"] if fb else [])
 dated = sorted(k for k in map(key, figs) if k != "0000")
 mon = lambda k: date(int(k[:4]), int(k[5:7]), 1).strftime("%B %Y")
-rng = mon(dated[-1]) if mon(dated[-1]) == mon(dated[0]) else f"{mon(dated[-1])} back to {mon(dated[0])}"
-s = re.sub(r'<p class="sub">[^<]*', f'<p class="sub">{" + ".join(parts)} · {rng} · newest first', s, count=1)
+rng = "" if nodates or not dated else mon(dated[-1]) if mon(dated[-1]) == mon(dated[0]) else f"{mon(dated[-1])} back to {mon(dated[0])}"
+s = re.sub(r'<p class="sub">[^<]*', f'<p class="sub">{" + ".join(parts)}' + ("" if nodates else f' · {rng} · newest first'), s, count=1)
 if ".b-Review" not in s: s = s.replace("</style>", ".b-Review{background:#7c3aed}</style>", 1)
 page.write_text(s)
 print(d.name, " + ".join(parts), "|", rng)
