@@ -21,8 +21,8 @@ have = {re.search(r'src="img/([^"]+)"', f).group(1) for f in figs}
 for c in cards:
     if c["file"] in have: continue
     w, h = Image.open(d / "img" / c["file"]).size
-    t = fmt(c["date"]); kind = c.get("type", "Feedback"); lab = {"Feedback": "Client Feedback", "Review": "5-Star Review"}[kind]
-    alt = "Client feedback" if kind == "Feedback" else "5-star review"
+    t = fmt(c["date"]); kind = c.get("type", "Feedback"); lab = {"Feedback": "Client Feedback", "Review": "5-Star Review", "Knot": "The Knot", "WeddingWire": "WeddingWire", "Zola": "Zola", "Google": "Google"}[kind]
+    alt = {"Feedback": "Client feedback", "Review": "5-star review"}.get(kind, f"Review on {lab}")
     figs.append(f'<figure class="c" data-s="{kind}"><figcaption><span class="b b-{kind}">{lab}</span>'
                 + ("" if nodates else f'<time>{t}</time>') + f'</figcaption><img loading="lazy" decoding="async" width="{w}" height="{h}" '
                 f'src="img/{c["file"]}" alt="{alt if nodates else alt + ", " + t}"></figure>')
